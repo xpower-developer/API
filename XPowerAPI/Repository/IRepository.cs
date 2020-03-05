@@ -8,7 +8,9 @@ using XPowerAPI.Repository.Collections;
 
 namespace XPowerAPI.Repository
 {
-    public interface IRepository<TEntity> where TEntity : class
+    public interface IRepository<TEntity, TParam> 
+        where TEntity : class
+        where TParam : class
     {
         /// <summary>
         /// Uses raw SQL queries to fetch the specified <typeparamref name="TEntity" /> data.
@@ -86,26 +88,26 @@ namespace XPowerAPI.Repository
         /// Inserts a new entity synchronously.
         /// </summary>
         /// <param name="entity">The entity to insert.</param>
-        TEntity Insert(TEntity entity);
+        TEntity Insert(TParam entity);
 
         /// <summary>
         /// Inserts a range of entities synchronously.
         /// </summary>
         /// <param name="entities">The entities to insert.</param>
-        void Insert(params TEntity[] entities);
+        void Insert(params TParam[] entities);
 
         /// <summary>
         /// Inserts a range of entities synchronously.
         /// </summary>
         /// <param name="entities">The entities to insert.</param>
-        void Insert(IEnumerable<TEntity> entities);
+        void Insert(IEnumerable<TParam> entities);
 
         /// <summary>
         /// Inserts a range of entities asynchronously.
         /// </summary>
         /// <param name="entities">The entities to insert.</param>
         /// <returns>A <see cref="Task"/> that represents the asynchronous insert operation.</returns>
-        Task InsertAsync(params TEntity[] entities);
+        Task InsertAsync(params TParam[] entities);
 
         /// <summary>
         /// Inserts a range of entities asynchronously.
@@ -113,25 +115,25 @@ namespace XPowerAPI.Repository
         /// <param name="entities">The entities to insert.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
         /// <returns>A <see cref="Task"/> that represents the asynchronous insert operation.</returns>
-        Task InsertAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default(CancellationToken));
+        Task InsertAsync(IEnumerable<TParam> entities, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Updates the specified entity.
         /// </summary>
         /// <param name="entity">The entity.</param>
-        void Update(TEntity entity);
+        void Update(TParam entity);
 
         /// <summary>
         /// Updates the specified entities.
         /// </summary>
         /// <param name="entities">The entities.</param>
-        void Update(params TEntity[] entities);
+        void Update(params TParam[] entities);
 
         /// <summary>
         /// Updates the specified entities.
         /// </summary>
         /// <param name="entities">The entities.</param>
-        void Update(IEnumerable<TEntity> entities);
+        void Update(IEnumerable<TParam> entities);
 
         /// <summary>
         /// Deletes the entity by the specified primary key.
@@ -143,18 +145,18 @@ namespace XPowerAPI.Repository
         /// Deletes the specified entity.
         /// </summary>
         /// <param name="entity">The entity to delete.</param>
-        void Delete(TEntity entity);
+        void Delete(TParam entity);
 
         /// <summary>
         /// Deletes the specified entities.
         /// </summary>
         /// <param name="entities">The entities.</param>
-        void Delete(params TEntity[] entities);
+        void Delete(params TParam[] entities);
 
         /// <summary>
         /// Deletes the specified entities.
         /// </summary>
         /// <param name="entities">The entities.</param>
-        void Delete(IEnumerable<TEntity> entities);
+        void Delete(IEnumerable<TParam> entities);
     }
 }

@@ -7,8 +7,8 @@ namespace XPowerAPI.Models
 {
     public class Device
     {
-        public string name { get; set; }
-        public string uuid { get; set; }
-        public bool state { get; set; }
+        public string Name { get; set; }
+        public string UUID { get; set; }
+        public bool State { get; set; }
     }
 }

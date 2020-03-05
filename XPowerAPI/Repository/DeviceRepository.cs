@@ -8,13 +8,14 @@ using XPowerAPI.Models;
 using MySql.Data.MySqlClient;
 using System.Text;
 using XPowerAPI.Repository.Collections;
+using XPowerAPI.Models.Params;
 
 namespace XPowerAPI.Repository
 {
     /// <summary>
     /// A device repository capable of finding devices based on their uuid
     /// </summary>
-    public class DeviceRepository : IRepository<Device>
+    public class DeviceRepository : IRepository<Device, DeviceParams>
     {
         GraphClient client = new GraphClient(new Uri(""), "user", "pass");
         MySqlConnection con = new MySqlConnection("");
@@ -29,14 +30,9 @@ namespace XPowerAPI.Repository
 
             try
             {
-                MySqlCommand cmd = new MySqlCommand("select count(*) as num from Device;");
+                MySqlCommand cmd = new MySqlCommand("select count(*) as num from Device;", con);
                 con.Open();
-                MySqlDataReader reader = cmd.ExecuteReader();
-
-                while (reader.Read())
-                {
-                    res = (int)reader["num"];
-                }
+                res = (int)cmd.ExecuteScalar();
             }
             catch (Exception)
             {
@@ -52,16 +48,25 @@ namespace XPowerAPI.Repository
 
         public void Delete(object id)
         {
+            throw new NotImplementedException();
+        }
+
+        public void Delete(DeviceParams entity)
+        {
             try
             {
+                if (string.IsNullOrEmpty(entity.key))
+                    return;
+
                 client.Cypher
-                    .Match("(n:Device)")
-                    .Where((Device n) => n.uuid == (string)id)
+                    .Match("(:ApiKey{key: userkey})<-[:HAS_KEY]-(:Customer)-[:OWNS]->(n:Device)")
+                    .Where((Device n) => n.UUID == entity.Device.UUID)
                     .DetachDelete("n")
+                    .WithParam("userkey", entity.key)
                     .ExecuteWithoutResults();
 
                 con.Open();
-                new MySqlCommand("delete from Device where DeviceUUID = " + (string)id + ";").ExecuteNonQuery();
+                new MySqlCommand("DELETE FROM Device WHERE Device.DeviceUUID = " + entity.Device.UUID + " AND ApiKey.Key = "+ entity.key + " JOIN ApiKey ON ApiKey.CustomerId = Device.CustomerId;", con).ExecuteNonQuery();
             }
             catch (Exception)
             {
@@ -73,36 +78,18 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Delete(Device entity)
+        public void Delete(params DeviceParams[] entities)
         {
+            if (entities.Length <= 0)
+                return;
+            if (string.IsNullOrEmpty(entities[0].key))
+                return;
+
             try
             {
+                string[] ids = entities.Select(e => e.Device.UUID).ToArray();
                 client.Cypher
-                    .Match("(n:Device)")
-                    .Where((Device n) => n.uuid == entity.uuid)
-                    .DetachDelete("n")
-                    .ExecuteWithoutResults();
-
-                con.Open();
-                new MySqlCommand("delete from Device where DeviceUUID = " + entity.uuid + ";").ExecuteNonQuery();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-            finally
-            {
-                con.Close();
-            }
-        }
-
-        public void Delete(params Device[] entities)
-        {
-            try
-            {
-                string[] ids = entities.Select(e => e.uuid).ToArray();
-                client.Cypher
-                    .Match("(n:Device)")
+                    .Match("(:ApiKey{ key: userkey})< -[:HAS_KEY] - (: Customer) -[:OWNS]->(n: Device)")
                     .Where("n.uuid IN {ids}")
                     .WithParams(new { ids })
                     .DetachDelete("n")
@@ -115,7 +102,7 @@ namespace XPowerAPI.Repository
                 }
 
                 con.Open();
-                new MySqlCommand(builder.ToString()[..^3] + ';').ExecuteNonQuery();
+                new MySqlCommand(builder.ToString()[..^4] + " AND ApiKey.Key = " + entities[0].key + " JOIN ApiKey ON ApiKey.CustomerId = Device.CustomerId;", con).ExecuteNonQuery();
 
             }
             catch (Exception)
@@ -128,7 +115,8 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Delete(IEnumerable<Device> entities)
+        //TODO: everything from here and down
+        public void Delete(IEnumerable<DeviceParams> entities)
         {
             Delete(entities.ToArray());
         }
@@ -167,9 +155,9 @@ namespace XPowerAPI.Repository
 
                 while (reader.Read())
                 {
-                    d.name = reader.GetString(reader.GetOrdinal("name"));
-                    d.uuid = reader.GetString(reader.GetOrdinal("uuid"));
-                    d.state = reader.GetBoolean(reader.GetOrdinal("state"));
+                    d.Name = reader.GetString(reader.GetOrdinal("name"));
+                    d.UUID = reader.GetString(reader.GetOrdinal("uuid"));
+                    d.State = reader.GetBoolean(reader.GetOrdinal("state"));
                 }
             }
             catch (Exception)
@@ -181,7 +169,7 @@ namespace XPowerAPI.Repository
                 con.Close();
             }
 
-            return string.IsNullOrEmpty(d.uuid) ? null : d;
+            return string.IsNullOrEmpty(d.UUID) ? null : d;
         }
 
         public Task<Device> FindAsync(params object[] keyValues)
@@ -214,9 +202,9 @@ namespace XPowerAPI.Repository
                 {
                     Device device = new Device()
                     {
-                        name = reader.GetString(reader.GetOrdinal("Name")),
-                        uuid = reader.GetString(reader.GetOrdinal("DeviceUUID")),
-                        state = reader.GetBoolean(reader.GetOrdinal("State")),
+                        Name = reader.GetString(reader.GetOrdinal("Name")),
+                        UUID = reader.GetString(reader.GetOrdinal("DeviceUUID")),
+                        State = reader.GetBoolean(reader.GetOrdinal("State")),
                     };
 
                     devices[i] = device;
@@ -250,7 +238,7 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public Device Insert(Device entity)
+        public Device Insert(DeviceParams entity)
         {
             try
             {
@@ -271,7 +259,7 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Insert(params Device[] entities)
+        public void Insert(params DeviceParams[] entities)
         {
             try
             {
@@ -294,22 +282,22 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Insert(IEnumerable<Device> entities)
+        public void Insert(IEnumerable<DeviceParams> entities)
         {
             Insert(entities.ToArray());
         }
 
-        public Task InsertAsync(params Device[] entities)
+        public Task InsertAsync(params DeviceParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task InsertAsync(IEnumerable<Device> entities, CancellationToken cancellationToken = default)
+        public Task InsertAsync(IEnumerable<DeviceParams> entities, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(Device entity)
+        public void Update(DeviceParams entity)
         {
             try
             {
@@ -326,7 +314,7 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Update(params Device[] entities)
+        public void Update(params DeviceParams[] entities)
         {
             try
             {
@@ -346,7 +334,7 @@ namespace XPowerAPI.Repository
             }
         }
 
-        public void Update(IEnumerable<Device> entities)
+        public void Update(IEnumerable<DeviceParams> entities)
         {
             Update(entities.ToArray());
         }

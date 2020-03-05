@@ -7,8 +7,8 @@ namespace XPowerAPI.Models
 {
     public class Statistic
     {
-        public string kind { get; set; }
-        public string value { get; set; }
-        public DateTime time { get; set; }
+        public string Kind { get; set; }
+        public string Value { get; set; }
+        public DateTime Time { get; set; }
     }
 }
