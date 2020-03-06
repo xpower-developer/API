@@ -22,6 +22,8 @@ namespace XPowerAPI.Controllers
                 return Forbid("Bearer token was null");
 
             //call repo etc.
+
+            return Ok();
         }
 
     }

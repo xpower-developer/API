@@ -8,69 +8,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using XPowerAPI.Models;
-using XPowerAPI.Models.Params;
 using XPowerAPI.Repository.Collections;
 
 namespace XPowerAPI.Repository
 {
-    public class CustomerRepository : IRepository<Customer, CustomerParams>
+    public class CustomerRepository 
     {
-        ILogger logger;
-
-        GraphClient client = new GraphClient(new Uri(""), "user", "pass");
-        MySqlConnection con = new MySqlConnection("");
-
-        public CustomerRepository(ILogger logger)
-        {
-            this.logger = logger;
-        }
-
-        ~CustomerRepository() {
-            con.Dispose();
-            client.Dispose();
-        }
-
-        public int Count()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(object id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(CustomerParams entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(params CustomerParams[] entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete(IEnumerable<CustomerParams> entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool Exists(object key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> ExistsAsync(object key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Customer Find(params object[] keyValues)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> FindAsync(params object[] keyValues)
+        /*public async Task<Customer> FindAsync(params object[] keyValues)
         {
             if (keyValues.Length == 0 || keyValues[0] == null)
                 return null;
@@ -116,76 +60,6 @@ namespace XPowerAPI.Repository
             {
                 await con.CloseAsync();
             }
-        }
-
-        public Task<Customer> FindAsync(object[] keyValues, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Customer> FromSql(string sql, params object[] parameters)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<Customer> GetAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IEnumerable<Customer>> GetAllAsync()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IPagedList<Customer> GetPagedList(object[] keyValues, int pageIndex = 0, int pageSize = 20)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<IPagedList<Customer>> GetPagedListAsync(object[] keyValues, int pageIndex = 0, int pageSize = 20, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Customer Insert(CustomerParams entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Insert(params CustomerParams[] entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Insert(IEnumerable<CustomerParams> entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task InsertAsync(params CustomerParams[] entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task InsertAsync(IEnumerable<CustomerParams> entities, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(CustomerParams entity)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(params CustomerParams[] entities)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Update(IEnumerable<CustomerParams> entities)
-        {
-            throw new NotImplementedException();
-        }
+        }*/
     }
 }
