@@ -11,7 +11,6 @@ namespace XPowerAPI.Services.Security
 {
     public class SHA512HashingService : IHashingService
     {
-        //private const string PASSWORD_PATTERN = "^[\\w]([\\d\\w!\"#$%&'()*+,\\-./:;<=>?@\\[\\]\\^_`{|}~])+";
         private SecureRandom random = new SecureRandom();
 
         public bool CompareHash(in byte[] input, byte[] salt, in byte[] hash)

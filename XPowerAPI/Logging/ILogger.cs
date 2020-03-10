@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 
 namespace XPowerAPI.Logging
 {
-    interface ILogger
+    public interface ILogger
     {
-        Task Log(string msg);
+        void Log(string msg);
+        Task LogAsync(string msg);
     }
 }

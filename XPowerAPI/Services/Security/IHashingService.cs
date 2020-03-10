@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace XPowerAPI.Services.Security
 {
-    interface IHashingService
+    public interface IHashingService
     {
         /// <summary>
         /// Creates a fresh hash based on the input string, as well as some freshy generated salt

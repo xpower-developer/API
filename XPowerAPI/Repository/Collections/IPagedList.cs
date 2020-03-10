@@ -15,9 +15,9 @@ namespace XPowerAPI.Repository.Collections
         /// <value>The index start value.</value>
         int IndexFrom { get; }
         /// <summary>
-        /// Gets the page index (current).
+        /// Gets the page number (current).
         /// </summary>
-        int PageIndex { get; }
+        int PageNumber { get; }
         /// <summary>
         /// Gets the page size.
         /// </summary>
