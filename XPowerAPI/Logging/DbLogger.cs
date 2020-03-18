@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 
 namespace XPowerAPI.Logging
 {
-    public class DbLogger : ILogger, IDisposable
+    public class DbLogger : ILogger
     {
         private bool isDisposed = false;
         MySqlConnection con;
         MySqlCommand cmd;
 
-        public DbLogger([FromServices]MySqlConnection con)
+        public DbLogger(
+            [FromServices]MySqlConnection con)
         {
             this.con = con;
             cmd = new MySqlCommand("WriteLog", con) { CommandType = System.Data.CommandType.StoredProcedure };

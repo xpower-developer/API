@@ -17,13 +17,13 @@ namespace XPowerAPI.Repository
 {
     public class CustomerRepository : IRepository<Customer, CustomerParams>, IDisposable
     {
-        private bool isDisposing = false;
+        private bool isDisposed = false;
 
         private MySqlConnection con;
         private ILogger logger;
 
         public CustomerRepository(
-            [FromServices]MySqlConnection con, 
+            [FromServices]MySqlConnection con,
             [FromServices]ILogger logger)
         {
             this.con = con;
@@ -93,7 +93,7 @@ namespace XPowerAPI.Repository
 
         protected virtual void Dispose(bool desposing)
         {
-            if (isDisposing) return;
+            if (isDisposed) return;
 
             if (desposing)
             {
@@ -130,8 +130,8 @@ namespace XPowerAPI.Repository
                 {
                     CommandType = System.Data.CommandType.StoredProcedure
                 };
-                cmd.Parameters.Add("key", MySqlDbType.VarChar);
-                cmd.Parameters["key"].Value = val;
+                cmd.Parameters.Add("apikey", MySqlDbType.VarChar);
+                cmd.Parameters["apikey"].Value = val;
             }
 
             bool res = false;
@@ -183,8 +183,8 @@ namespace XPowerAPI.Repository
                 {
                     CommandType = System.Data.CommandType.StoredProcedure
                 };
-                cmd.Parameters.Add("key", MySqlDbType.VarChar);
-                cmd.Parameters["key"].Value = val;
+                cmd.Parameters.Add("apikey", MySqlDbType.VarChar);
+                cmd.Parameters["apikey"].Value = val;
             }
 
             bool res = false;
@@ -209,12 +209,125 @@ namespace XPowerAPI.Repository
 
         public Customer Find(params object[] keyValues)
         {
-            throw new NotImplementedException();
+            if (keyValues == null || keyValues.Length == 0 || keyValues[0] == null)
+                throw new ArgumentNullException(nameof(keyValues));
+
+            MySqlCommand cmd = new MySqlCommand("GetCustomerByEmail", con) { CommandType = System.Data.CommandType.StoredProcedure };
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                ParameterName = "email",
+                Value = keyValues[0],
+                MySqlDbType = MySqlDbType.VarChar,
+                Direction = System.Data.ParameterDirection.Input
+            });
+
+            Customer cust = null;
+            try
+            {
+                con.Open();
+                MySqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    byte[] pass = new byte[64],
+                            salt = new byte[32];
+
+                    reader.GetBytes(reader.GetOrdinal("Password"), 0, pass, 0, 64);
+                    reader.GetBytes(reader.GetOrdinal("Salt"), 0, salt, 0, 64);
+
+                    cust = new Customer(
+                            reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            reader.GetString(reader.GetOrdinal("Email")),
+                            reader.GetString(reader.GetOrdinal("FirstName")),
+                            reader.GetString(reader.GetOrdinal("LastName")),
+                            reader.GetInt32(reader.GetOrdinal("CityId")),
+                            reader.GetString(reader.GetOrdinal("CityName")),
+                            0/*reader.GetInt64(reader.GetOrdinal("StreetId"))*/, //street table not yet available
+                            ""/*reader.GetString(reader.GetOrdinal("Street"))*/,
+                            reader.GetString(reader.GetOrdinal("StreetNumber")),
+                            reader.GetDateTime(reader.GetOrdinal("Created")),
+                            pass,
+                            salt
+                            );
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                con.Close();
+                cmd.Dispose();
+            }
+
+            return cust;
         }
 
-        public Task<Customer> FindAsync(params object[] keyValues)
+        public async Task<Customer> FindAsync(params object[] keyValues)
         {
-            throw new NotImplementedException();
+            if (keyValues == null || keyValues.Length == 0 || keyValues[0] == null)
+                throw new ArgumentNullException(nameof(keyValues));
+
+            MySqlCommand cmd = new MySqlCommand("GetCustomerByEmail", con) { CommandType = System.Data.CommandType.StoredProcedure };
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                ParameterName = "email",
+                Value = keyValues[0],
+                MySqlDbType = MySqlDbType.VarChar,
+                Direction = System.Data.ParameterDirection.Input
+            });
+
+            Customer cust = null;
+            try
+            {
+                using (CancellationTokenSource tkn = new CancellationTokenSource(5000))
+                {
+                    //open connection
+                    await con.OpenAsync(tkn.Token).ConfigureAwait(true);
+
+                    //if unable to connect to the db, cancel the request
+                    if (tkn.IsCancellationRequested)
+                        return null;
+                }
+
+                DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                while (await reader.ReadAsync().ConfigureAwait(false))
+                {
+                    byte[]  pass = new byte[64],
+                            salt = new byte[32];
+
+                    reader.GetBytes(reader.GetOrdinal("Password"), 0, pass, 0, 64);
+                    reader.GetBytes(reader.GetOrdinal("Salt"), 0, salt, 0, 32);
+
+                    cust = new Customer(
+                            reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                            reader.GetString(reader.GetOrdinal("Email")),
+                            reader.GetString(reader.GetOrdinal("FirstName")),
+                            reader.GetString(reader.GetOrdinal("LastName")),
+                            reader.GetInt32(reader.GetOrdinal("CityId")),
+                            reader.GetString(reader.GetOrdinal("CityName")),
+                            0/*reader.GetInt64(reader.GetOrdinal("StreetId"))*/, //street table not yet available
+                            ""/*reader.GetString(reader.GetOrdinal("Street"))*/,
+                            reader.GetString(reader.GetOrdinal("StreetNumber")),
+                            reader.GetDateTime(reader.GetOrdinal("Created")),
+                            pass,
+                            salt
+                            );
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await con.CloseAsync().ConfigureAwait(false);
+                cmd.Dispose();
+            }
+
+            return cust;
         }
 
         public Task<Customer> FindAsync(object[] keyValues, CancellationToken cancellationToken)
@@ -251,9 +364,7 @@ namespace XPowerAPI.Repository
         {
             //check parameter validity
             if (entity == null ||
-                entity.Customer == null ||
-                string.IsNullOrWhiteSpace(entity.Key) ||
-                entity.Key.Length == 0)
+                entity.Customer == null)
                 throw new ArgumentNullException(nameof(entity));
 
             //initialize the command
@@ -269,20 +380,24 @@ namespace XPowerAPI.Repository
                 cmd.Parameters.AddRange(
                     new MySqlParameter[] {
                         new MySqlParameter("email", MySqlDbType.VarChar),
+                        new MySqlParameter("fname", MySqlDbType.VarChar),
+                        new MySqlParameter("lname", MySqlDbType.VarChar),
                         new MySqlParameter("pass", MySqlDbType.Binary),
                         new MySqlParameter("salt", MySqlDbType.Binary),
                         new MySqlParameter("cityId", MySqlDbType.Int32),
-                        new MySqlParameter("streetId", MySqlDbType.Int64),
+                        new MySqlParameter("street", MySqlDbType.VarChar),
                         new MySqlParameter("streetNumber", MySqlDbType.VarChar)
                     });
 
                 //add paramter values
                 cmd.Parameters["email"].Value = entity.Customer.Email;
+                cmd.Parameters["fname"].Value = entity.Customer.FirstName;
+                cmd.Parameters["lname"].Value = entity.Customer.LastName;
                 cmd.Parameters["pass"].Value = entity.Customer.GetPassword();
                 cmd.Parameters["salt"].Value = entity.Customer.GetSalt();
                 cmd.Parameters["cityId"].Value = entity.Customer.CityId;
-                cmd.Parameters["streetId"].Value = entity.Customer.StreetId;
-                cmd.Parameters["streetName"].Value = entity.Customer.StreetNumber;
+                cmd.Parameters["street"].Value = entity.Customer.Street;
+                cmd.Parameters["streetNumber"].Value = entity.Customer.StreetNumber;
 
                 //open connection
                 con.Open();
@@ -314,8 +429,6 @@ namespace XPowerAPI.Repository
             //check parameter validity
             if (entities.Length == 0 || entities == null)
                 throw new ArgumentNullException(nameof(entities));
-            if (string.IsNullOrWhiteSpace(entities[0].Key) || entities[0].Key.Length == 0)
-                throw new ArgumentNullException(nameof(entities));
 
             //initialize the command
             MySqlCommand cmd = new MySqlCommand("CreateCustomer", con);
@@ -329,10 +442,12 @@ namespace XPowerAPI.Repository
                 cmd.Parameters.AddRange(
                     new MySqlParameter[] {
                         new MySqlParameter("email", MySqlDbType.VarChar),
+                        new MySqlParameter("fname", MySqlDbType.VarChar),
+                        new MySqlParameter("lname", MySqlDbType.VarChar),
                         new MySqlParameter("pass", MySqlDbType.Binary),
                         new MySqlParameter("salt", MySqlDbType.Binary),
                         new MySqlParameter("cityId", MySqlDbType.Int32),
-                        new MySqlParameter("streetId", MySqlDbType.Int64),
+                        new MySqlParameter("street", MySqlDbType.VarChar),
                         new MySqlParameter("streetNumber", MySqlDbType.VarChar)
                     });
 
@@ -343,11 +458,13 @@ namespace XPowerAPI.Repository
 
                     //add paramter values
                     cmd.Parameters["email"].Value = entities[i].Customer.Email;
+                    cmd.Parameters["fname"].Value = entities[i].Customer.FirstName;
+                    cmd.Parameters["lname"].Value = entities[i].Customer.LastName;
                     cmd.Parameters["pass"].Value = entities[i].Customer.GetPassword();
                     cmd.Parameters["salt"].Value = entities[i].Customer.GetSalt();
                     cmd.Parameters["cityId"].Value = entities[i].Customer.CityId;
-                    cmd.Parameters["streetId"].Value = entities[i].Customer.StreetId;
-                    cmd.Parameters["streetName"].Value = entities[i].Customer.StreetNumber;
+                    cmd.Parameters["street"].Value = entities[i].Customer.Street;
+                    cmd.Parameters["streetNumber"].Value = entities[i].Customer.StreetNumber;
 
                     //open connection
                     con.Open();
@@ -377,9 +494,7 @@ namespace XPowerAPI.Repository
         {
             //check parameter validity
             if (entity == null ||
-                entity.Customer == null ||
-                string.IsNullOrWhiteSpace(entity.Key) ||
-                entity.Key.Length == 0)
+                entity.Customer == null)
                 throw new ArgumentNullException(nameof(entity));
 
             //initialize the command
@@ -395,23 +510,34 @@ namespace XPowerAPI.Repository
                 cmd.Parameters.AddRange(
                     new MySqlParameter[] {
                         new MySqlParameter("email", MySqlDbType.VarChar),
+                        new MySqlParameter("fname", MySqlDbType.VarChar),
+                        new MySqlParameter("lname", MySqlDbType.VarChar),
                         new MySqlParameter("pass", MySqlDbType.Binary),
                         new MySqlParameter("salt", MySqlDbType.Binary),
                         new MySqlParameter("cityId", MySqlDbType.Int32),
-                        new MySqlParameter("streetId", MySqlDbType.Int64),
+                        new MySqlParameter("street", MySqlDbType.VarChar),
                         new MySqlParameter("streetNumber", MySqlDbType.VarChar)
                     });
 
                 //add paramter values
                 cmd.Parameters["email"].Value = entity.Customer.Email;
+                cmd.Parameters["fname"].Value = entity.Customer.FirstName;
+                cmd.Parameters["lname"].Value = entity.Customer.LastName;
                 cmd.Parameters["pass"].Value = entity.Customer.GetPassword();
                 cmd.Parameters["salt"].Value = entity.Customer.GetSalt();
                 cmd.Parameters["cityId"].Value = entity.Customer.CityId;
-                cmd.Parameters["streetId"].Value = entity.Customer.StreetId;
-                cmd.Parameters["streetName"].Value = entity.Customer.StreetNumber;
+                cmd.Parameters["street"].Value = entity.Customer.Street;
+                cmd.Parameters["streetNumber"].Value = entity.Customer.StreetNumber;
 
-                //open connection
-                await con.OpenAsync().ConfigureAwait(false);
+                using (CancellationTokenSource tkn = new CancellationTokenSource(5000))
+                {
+                    //open connection
+                    await con.OpenAsync(tkn.Token).ConfigureAwait(true);
+
+                    //if unable to connect to the db, cancel the request
+                    if (tkn.IsCancellationRequested)
+                        return null;
+                }
 
                 //execute the query
                 res = await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -440,8 +566,6 @@ namespace XPowerAPI.Repository
             //check parameter validity
             if (entities.Length == 0 || entities == null)
                 throw new ArgumentNullException(nameof(entities));
-            if (string.IsNullOrWhiteSpace(entities[0].Key) || entities[0].Key.Length == 0)
-                throw new ArgumentNullException(nameof(entities));
 
             //initialize the command
             MySqlCommand cmd = new MySqlCommand("CreateCustomer", con);
@@ -455,10 +579,12 @@ namespace XPowerAPI.Repository
                 cmd.Parameters.AddRange(
                     new MySqlParameter[] {
                         new MySqlParameter("email", MySqlDbType.VarChar),
+                        new MySqlParameter("fname", MySqlDbType.VarChar),
+                        new MySqlParameter("lname", MySqlDbType.VarChar),
                         new MySqlParameter("pass", MySqlDbType.Binary),
                         new MySqlParameter("salt", MySqlDbType.Binary),
                         new MySqlParameter("cityId", MySqlDbType.Int32),
-                        new MySqlParameter("streetId", MySqlDbType.Int64),
+                        new MySqlParameter("street", MySqlDbType.VarChar),
                         new MySqlParameter("streetNumber", MySqlDbType.VarChar)
                     });
 
@@ -469,14 +595,23 @@ namespace XPowerAPI.Repository
 
                     //add paramter values
                     cmd.Parameters["email"].Value = entities[i].Customer.Email;
+                    cmd.Parameters["fname"].Value = entities[i].Customer.FirstName;
+                    cmd.Parameters["lname"].Value = entities[i].Customer.LastName;
                     cmd.Parameters["pass"].Value = entities[i].Customer.GetPassword();
                     cmd.Parameters["salt"].Value = entities[i].Customer.GetSalt();
                     cmd.Parameters["cityId"].Value = entities[i].Customer.CityId;
-                    cmd.Parameters["streetId"].Value = entities[i].Customer.StreetId;
-                    cmd.Parameters["streetName"].Value = entities[i].Customer.StreetNumber;
+                    cmd.Parameters["street"].Value = entities[i].Customer.Street;
+                    cmd.Parameters["streetNumber"].Value = entities[i].Customer.StreetNumber;
 
-                    //open connection
-                    await con.OpenAsync().ConfigureAwait(false);
+                    using (CancellationTokenSource tkn = new CancellationTokenSource(5000))
+                    {
+                        //open connection
+                        await con.OpenAsync(tkn.Token).ConfigureAwait(true);
+
+                        //if unable to connect to the db, cancel the request
+                        if (tkn.IsCancellationRequested)
+                            return;
+                    }
 
                     //execute the query
                     await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);

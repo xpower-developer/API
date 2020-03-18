@@ -16,11 +16,11 @@ namespace XPowerAPI.Services.Security
         public bool CompareHash(in byte[] input, byte[] salt, in byte[] hash)
         {
             //check params
-            if (input == null)
+            if (input == null || input.Length == 0)
                 throw new ArgumentNullException(nameof(input));
-            if (hash == null)
+            if (hash == null || hash.Length == 0)
                 throw new ArgumentNullException(nameof(hash));
-            if (input.Length < 1)
+            if (input.Length < 0)
                 throw new ArgumentOutOfRangeException(nameof(input));
 
             //compute hash
@@ -29,12 +29,17 @@ namespace XPowerAPI.Services.Security
             {
                 byte[] data = new byte[input.Length + 32];
                 Array.Copy(input, 0, data, 0, input.Length);
-                Array.Copy(salt, input.Length, data, 0, 32);
+                Array.Copy(salt, 0, data, input.Length, 32);
                 freshHash = sha.ComputeHash(data);
             }
 
             //compare hashes
-            return hash.Equals(freshHash);
+            for (int i = 0; i < hash.Length; i++)
+            {
+                if (hash[i] != freshHash[i]) return false;
+            }
+
+            return true;
         }
 
         public byte[] CreateHash(in byte[] input, out byte[] salt)
@@ -55,7 +60,7 @@ namespace XPowerAPI.Services.Security
             {
                 byte[] data = new byte[input.Length + 32];
                 Array.Copy(input, 0, data, 0, input.Length);
-                Array.Copy(salt, input.Length, data, 0, 32);
+                Array.Copy(salt, 0, data, input.Length, 32);
                 hash = sha.ComputeHash(data);
             }
 
