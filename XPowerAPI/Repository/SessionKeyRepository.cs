@@ -28,7 +28,8 @@ namespace XPowerAPI.Repository
             this.con = con;
         }
 
-        ~SessionKeyRepository() {
+        ~SessionKeyRepository()
+        {
             Dispose(false);
         }
 
@@ -112,17 +113,129 @@ namespace XPowerAPI.Repository
 
         public SessionKey Find(params object[] keyValues)
         {
-            throw new NotImplementedException();
+            if (keyValues[0] == null)
+                throw new ArgumentNullException(nameof(keyValues));
+
+            string val = keyValues[0].ToString();
+
+            if (string.IsNullOrEmpty(val))
+                throw new ArgumentNullException(nameof(keyValues));
+
+            SessionKey key = null;
+            MySqlCommand cmd = new MySqlCommand();
+
+            //check whether the value is an email
+            if (val.Contains('@', StringComparison.OrdinalIgnoreCase))
+            {
+                cmd = new MySqlCommand("GetFullSessionKeyByEmail", con) { CommandType = System.Data.CommandType.StoredProcedure };
+                cmd.Parameters.Add("email", MySqlDbType.VarChar);
+                cmd.Parameters["email"].Value = val;
+                cmd.Parameters["email"].Direction = System.Data.ParameterDirection.Input;
+            }
+            //or a uuid
+            else if (val.Length == 36)
+            {
+                cmd = new MySqlCommand("GetFullSessionKeyById", con) { CommandType = System.Data.CommandType.StoredProcedure };
+                cmd.Parameters.Add("keyid", MySqlDbType.VarChar);
+                cmd.Parameters["keyid"].Value = val;
+                cmd.Parameters["keyid"].Direction = System.Data.ParameterDirection.Input;
+
+            }
+
+            try
+            {
+                con.Open();
+                MySqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    key = new SessionKey(
+                        reader.GetString(
+                            reader.GetOrdinal("SessionKeyId")),
+                        reader.GetString(
+                            reader.GetOrdinal("ApiKeyId")),
+                        reader.GetDateTime(
+                            reader.GetOrdinal("ExpirationDate")));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                con.Close();
+                cmd.Dispose();
+            }
+
+            return key;
         }
 
-        public Task<SessionKey> FindAsync(params object[] keyValues)
+        public async Task<SessionKey> FindAsync(params object[] keyValues)
         {
-            throw new NotImplementedException();
+            if (keyValues[0] == null)
+                throw new ArgumentNullException(nameof(keyValues));
+
+            string val = keyValues[0].ToString();
+
+            if (string.IsNullOrEmpty(val))
+                throw new ArgumentNullException(nameof(keyValues));
+
+            SessionKey key = null;
+            MySqlCommand cmd = new MySqlCommand();
+
+            //check whether the value is an email
+            if (val.Contains('@', StringComparison.OrdinalIgnoreCase))
+            {
+                cmd = new MySqlCommand("GetFullSessionKeyByEmail", con) { CommandType = System.Data.CommandType.StoredProcedure };
+                cmd.Parameters.Add("email", MySqlDbType.VarChar);
+                cmd.Parameters["email"].Value = val;
+                cmd.Parameters["email"].Direction = System.Data.ParameterDirection.Input;
+            }
+            //or a uuid
+            else if (val.Length == 36)
+            {
+                cmd = new MySqlCommand("GetFullSessionKeyById", con) { CommandType = System.Data.CommandType.StoredProcedure };
+                cmd.Parameters.Add("keyid", MySqlDbType.VarChar);
+                cmd.Parameters["keyid"].Value = val;
+                cmd.Parameters["keyid"].Direction = System.Data.ParameterDirection.Input;
+
+            }
+
+            try
+            {
+                con.Open();
+                DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                while (reader.Read())
+                {
+                    key = new SessionKey(
+                        reader.GetString(
+                            reader.GetOrdinal("SessionKeyId")),
+                        reader.GetString(
+                            reader.GetOrdinal("ApiKeyId")),
+                        reader.GetDateTime(
+                            reader.GetOrdinal("ExpirationDate")));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await con.CloseAsync().ConfigureAwait(false);
+                cmd.Dispose();
+            }
+
+            return key;
         }
 
-        public Task<SessionKey> FindAsync(object[] keyValues, CancellationToken cancellationToken)
+        public async Task<SessionKey> FindAsync(object[] keyValues, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return await FindAsync(keyValues).ConfigureAwait(false);
         }
 
         public IEnumerable<SessionKey> FromSql(string sql, params object[] parameters)
@@ -150,6 +263,7 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
+        //fix out params
         public SessionKey Insert(SessionKeyParams entity)
         {
             //check that the email is non null
@@ -201,6 +315,7 @@ namespace XPowerAPI.Repository
             return ses;
         }
 
+        //fix out params
         public void Insert(params SessionKeyParams[] entities)
         {
             //check that the email is non null
@@ -248,6 +363,7 @@ namespace XPowerAPI.Repository
             }
         }
 
+        //fix out params
         public void Insert(IEnumerable<SessionKeyParams> entities)
         {
             Insert(entities);
@@ -297,7 +413,7 @@ namespace XPowerAPI.Repository
                 {
                     ses = new SessionKey(
                         reader.GetString(
-                            reader.GetOrdinal("SessionKeyId")), 
+                            reader.GetOrdinal("SessionKeyId")),
                         reader.GetDateTime(
                             reader.GetOrdinal("ExpirationDate")));
                 }
@@ -327,6 +443,7 @@ namespace XPowerAPI.Repository
             return ses;
         }
 
+        //fix out params
         public async Task InsertAsync(params SessionKeyParams[] entities)
         {
             //check that the email is non null
@@ -382,6 +499,7 @@ namespace XPowerAPI.Repository
             }
         }
 
+        //fix out params
         public async Task InsertAsync(IEnumerable<SessionKeyParams> entities, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
