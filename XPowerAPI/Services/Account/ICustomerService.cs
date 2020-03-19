@@ -7,7 +7,7 @@ using XPowerAPI.Models;
 
 namespace XPowerAPI.Services.Account
 {
-    interface ICustomerService : IDisposable
+    public interface ICustomerService : IDisposable
     {
         /// <summary>
         /// Creates a new customer with the specified values, so long as a customer with the specified email does not exist

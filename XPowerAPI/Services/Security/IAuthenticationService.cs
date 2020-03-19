@@ -7,7 +7,7 @@ using XPowerAPI.Models;
 
 namespace XPowerAPI.Services.Security
 {
-    interface IAuthenticationService : IDisposable
+    public interface IAuthenticationService : IDisposable
     {
         /// <summary>
         /// Authenticates a user and grants a new session key, should their login be correct

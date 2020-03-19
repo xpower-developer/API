@@ -16,6 +16,7 @@ using XPowerAPI.Logging;
 using XPowerAPI.Models;
 using XPowerAPI.Models.Params;
 using XPowerAPI.Repository;
+using XPowerAPI.Services.Account;
 using XPowerAPI.Services.Security;
 using XPowerAPI.Services.Security.Account;
 
@@ -48,9 +49,6 @@ namespace XPowerAPI
                     .AllowAnyHeader();
             }));
             services
-                /*.AddScoped<MySqlConnection>(
-                    x => new MySqlConnection(
-                        Configuration.GetSection("ConnectionStrings")["maria"]))*/
                 .AddScoped<ILogger, DbLogger>(
                     x => new DbLogger(new MySqlConnection(con)))
                 .AddScoped<IHashingService, SHA512HashingService>()
@@ -79,7 +77,9 @@ namespace XPowerAPI
                     x => new SessionKeyRepository(
                             new MySqlConnection(con),
                             new DbLogger(
-                                new MySqlConnection(con))));
+                                new MySqlConnection(con))))
+                .AddScoped<IAuthenticationService, AuthenticationService>()
+                .AddScoped<ICustomerService, CustomerService>();
 
             services.AddControllers();
         }
