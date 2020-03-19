@@ -8,7 +8,7 @@ using XPowerAPI.Repository.Collections;
 
 namespace XPowerAPI.Repository
 {
-    public interface IRepository<TEntity, TParam> 
+    public interface IRepository<TEntity, TParam> : IDisposable
         where TEntity : class
         where TParam : class
     {

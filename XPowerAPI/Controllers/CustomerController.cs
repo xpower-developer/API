@@ -11,6 +11,9 @@ using XPowerAPI.Models.Params;
 using XPowerAPI.Repository;
 using XPowerAPI.Services.Security.Account;
 using XPowerAPI.Logging;
+using XPowerAPI.Services.Account;
+using XPowerAPI.Services.Security;
+using Microsoft.AspNetCore.Cors;
 
 namespace XPowerAPI.Controllers
 {
@@ -23,11 +26,15 @@ namespace XPowerAPI.Controllers
     {
         IRepository<SessionKey, SessionKeyParams> sessionKeyRepo;
         IRepository<Customer, CustomerParams> customerRepo;
+        ICustomerService customerService;
         IPasswordService passwordService;
+        IAuthenticationService authenticationService;
         ILogger logger;
 
         [HttpGet("confirmation")]
-        public async Task<IActionResult> YoureGoodFam() {
+        [EnableCors("allow_all")]
+        public async Task<IActionResult> YoureGoodFam()
+        {
             return Ok("You're good fam");
         }
 
@@ -56,6 +63,7 @@ namespace XPowerAPI.Controllers
         /// <param name="request">the request data to be used when creating the customer</param>
         /// <returns>a http response code, as well as debug text</returns>
         [HttpPost("signup")]
+        [EnableCors("allow_all")]
         public async Task<IActionResult> CreateCustomer([FromBody]CustomerSignup request)
         {
             //check whether a request body is supplied
@@ -94,60 +102,10 @@ namespace XPowerAPI.Controllers
                 return BadRequest($"The supplied password length was invalid({passwordService.MinLength}-{passwordService.MaxLength} long, one uppercase, lowercase, number and special character minimum)");
 
             //check if the customer is already created within the database
-            if (await customerRepo.ExistsAsync(request.Email).ConfigureAwait(true))
+            if (await customerService.CustomerExists(request.Email).ConfigureAwait(false))
                 return BadRequest("An account using that email already exists");
 
-            //create a new password hash/salt for the customer
-            //based on the password parameter
-            byte[] password = new byte[64],
-                    salt = new byte[32];
-
-            try
-            {
-                password = passwordService.CreatePassword(request.Password, out salt);
-
-            }
-            catch (ArgumentNullException)
-            {
-                await logger
-                    .LogAsync("a null parameter was passed to the password service in the CreateCustomer action in the customer controller")
-                    .ConfigureAwait(false);
-            }
-
-            //initialize an empty customer object
-            Customer cust = null;
-
-            try
-            {
-                //attempt to insert the customer into the database
-                cust =
-                    await customerRepo
-                        .InsertAsync(
-                            new CustomerParams()
-                            {
-                                Key = null,
-                                Customer = new Customer(
-                                    request.Email,
-                                    request.FirstName,
-                                    request.LastName,
-                                    request.CityId,
-                                    request.Street,
-                                    request.StreetNumber,
-                                    password,
-                                    salt
-                                    )
-                            })
-                        .ConfigureAwait(false);
-            }
-            //log potential database errors
-            catch (DbException e)
-            {
-                await logger.LogAsync($"An error occured when trying to insert user with email {request.Email} into the database: DbError-{e.ErrorCode} {e.Message}").ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            Customer cust = await customerService.CreateCustomer(request).ConfigureAwait(false);
 
             //return 200OK if the insert was successful
             if (cust != null)
@@ -161,8 +119,8 @@ namespace XPowerAPI.Controllers
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPost]
-        [Route("signin")]
+        [HttpPost("signin")]
+        [EnableCors("allow_all")]
         public async Task<IActionResult> SigninCustomer([FromBody]CustomerSignin request)
         {
             //check parameters
@@ -173,37 +131,24 @@ namespace XPowerAPI.Controllers
             if (request.password == null || request.password.Length == 0)
                 return BadRequest("the supplied password was null or empty");
 
-            Customer cust;
             try
             {
-                //check if customer exists and fetch it if it does
-                cust = await customerRepo.FindAsync(request.email).ConfigureAwait(true);
+                SessionKey key = await authenticationService.AuthenticateUser(request).ConfigureAwait(false);
+
+                if (key != null)
+                    return Ok(key);
+            }
+            catch (ArgumentNullException ane) {
+                return BadRequest(ane.ParamName + " was null");
+            }
+            catch (ArgumentException ae)
+            {
+                return BadRequest(ae.Message);
             }
             catch (Exception)
             {
                 throw;
             }
-
-            if (cust == null)
-                return BadRequest($"an account with the email '{request.email}' does not exist");
-
-            SessionKey key;
-            try
-            {
-                //check if customer password matches
-                if (!passwordService.ComparePasswords(request.password, cust.GetPassword(), cust.GetSalt()))
-                    return Unauthorized("invalid email/password combination");
-
-                //create new session key and return it to the requestee
-                key = await sessionKeyRepo.InsertAsync(new SessionKeyParams(request.email)).ConfigureAwait(true);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
-            if (key != null)
-                return Ok(key);
 
             return BadRequest("an error occured whilst creating the session key");
         }

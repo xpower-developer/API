@@ -40,7 +40,13 @@ namespace XPowerAPI
 
             string con = Configuration.GetSection("ConnectionStrings")["maria"];
 
-            services.AddCors();
+
+            services.AddCors(co => co.AddPolicy("allow_all", b => {
+                b
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            }));
             services
                 /*.AddScoped<MySqlConnection>(
                     x => new MySqlConnection(
@@ -86,6 +92,7 @@ namespace XPowerAPI
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors("allow_all");
             app.UseHttpsRedirection();
 
             app.UseRouting();
