@@ -9,6 +9,7 @@ using XPowerAPI.Logging;
 using XPowerAPI.Models;
 using XPowerAPI.Models.Params;
 using XPowerAPI.Repository;
+using XPowerAPI.Services.Account;
 using XPowerAPI.Services.Security;
 using XPowerAPI.Services.Security.Account;
 using Xunit;
@@ -110,12 +111,26 @@ namespace XPowerAPI_Tests
 
             //"goodpassword12@B"
             CustomerController ctl = new CustomerController(
-                new SessionKeyRepository(
+                new CustomerService(
+                    new CustomerRepository(
                     con,
                     new EmptyLogger()),
-                new CustomerRepository(
-                    con,
-                    new EmptyLogger()),
+                    new PasswordService(
+                    new SHA512HashingService(),
+                    ((int)conf
+                            .GetSection("Account")
+                            .GetSection("Security")
+                            .GetValue(
+                                typeof(int),
+                                "PasswordMinLength")),
+                    ((int)conf
+                           .GetSection("Account")
+                           .GetSection("Security")
+                           .GetValue(
+                               typeof(int),
+                               "PasswordMaxLength"))),
+                    new EmptyLogger()
+                    ),
                 new PasswordService(
                     new SHA512HashingService(),
                     ((int)conf
@@ -130,6 +145,27 @@ namespace XPowerAPI_Tests
                            .GetValue(
                                typeof(int),
                                "PasswordMaxLength"))),
+                new AuthenticationService(
+                    new CustomerRepository(
+                    con,
+                    new EmptyLogger()),
+                new SessionKeyRepository(
+                    con,
+                    new EmptyLogger()),
+                    new PasswordService(
+                    new SHA512HashingService(),
+                    ((int)conf
+                            .GetSection("Account")
+                            .GetSection("Security")
+                            .GetValue(
+                                typeof(int),
+                                "PasswordMinLength")),
+                    ((int)conf
+                           .GetSection("Account")
+                           .GetSection("Security")
+                           .GetValue(
+                               typeof(int),
+                               "PasswordMaxLength")))),
                 new EmptyLogger());
 
             ctl.CreateCustomer(
