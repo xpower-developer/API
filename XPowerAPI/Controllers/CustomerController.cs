@@ -24,15 +24,12 @@ namespace XPowerAPI.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        IRepository<SessionKey, SessionKeyParams> sessionKeyRepo;
-        IRepository<Customer, CustomerParams> customerRepo;
         ICustomerService customerService;
         IPasswordService passwordService;
         IAuthenticationService authenticationService;
         ILogger logger;
 
         [HttpGet("confirmation")]
-        [EnableCors("allow_all")]
         public async Task<IActionResult> YoureGoodFam()
         {
             return Ok("You're good fam");
@@ -44,14 +41,14 @@ namespace XPowerAPI.Controllers
         /// <param name="customerRepo">the desired customer repository</param>
         /// <param name="passwordService">´the desired password service</param>
         public CustomerController(
-            [FromServices]IRepository<SessionKey, SessionKeyParams> sessionKeyRepo,
-            [FromServices]IRepository<Customer, CustomerParams> customerRepo,
+            [FromServices]ICustomerService customerService,
             [FromServices]IPasswordService passwordService,
+            [FromServices]IAuthenticationService authenticationService,
             [FromServices]ILogger logger)
         {
-            this.sessionKeyRepo = sessionKeyRepo;
-            this.customerRepo = customerRepo;
+            this.customerService = customerService;
             this.passwordService = passwordService;
+            this.authenticationService = authenticationService;
             this.logger = logger;
         }
 
@@ -63,7 +60,6 @@ namespace XPowerAPI.Controllers
         /// <param name="request">the request data to be used when creating the customer</param>
         /// <returns>a http response code, as well as debug text</returns>
         [HttpPost("signup")]
-        [EnableCors("allow_all")]
         public async Task<IActionResult> CreateCustomer([FromBody]CustomerSignup request)
         {
             //check whether a request body is supplied
@@ -120,7 +116,6 @@ namespace XPowerAPI.Controllers
         /// <param name="request"></param>
         /// <returns></returns>
         [HttpPost("signin")]
-        [EnableCors("allow_all")]
         public async Task<IActionResult> SigninCustomer([FromBody]CustomerSignin request)
         {
             //check parameters
