@@ -15,5 +15,7 @@ namespace XPowerAPI.Services.Security
         /// <param name="request">the request parameters</param>
         /// <returns>the fresh session key</returns>
         Task<SessionKey> AuthenticateUser(CustomerSignin request);
+
+        Task<SessionKey> IsSignedIn(string key, bool refresh = false);
     }
 }

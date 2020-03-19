@@ -72,6 +72,14 @@ namespace XPowerAPI.Services.Security
             GC.SuppressFinalize(this);
         }
 
+        public Task<SessionKey> IsSignedIn(string key, bool refresh = false)
+        {
+            //call stored procedure to update expiration date and return the new expiration date
+
+            //if a result is returned, return the new key, otherwise null = key is no longer valid
+            throw new NotImplementedException();
+        }
+
         protected virtual void Dispose(bool desposing)
         {
             if (isDisposed) return;
