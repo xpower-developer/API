@@ -40,6 +40,7 @@ namespace XPowerAPI
 
             string con = Configuration.GetSection("ConnectionStrings")["maria"];
 
+            services.AddCors();
             services
                 /*.AddScoped<MySqlConnection>(
                     x => new MySqlConnection(

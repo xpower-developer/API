@@ -156,6 +156,11 @@ namespace XPowerAPI.Controllers
                 return BadRequest("Unable to sign up user");
         }
 
+        /// <summary>
+        /// Signs in a customer and grants them a session key
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("signin")]
         public async Task<IActionResult> SigninCustomer([FromBody]CustomerSignin request)
