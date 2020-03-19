@@ -30,7 +30,7 @@ namespace XPowerAPI.Controllers
         ILogger logger;
 
         [HttpGet("confirmation")]
-        public async Task<IActionResult> YoureGoodFam()
+        public IActionResult YoureGoodFam()
         {
             return Ok("You're good fam");
         }
