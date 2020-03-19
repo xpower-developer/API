@@ -101,7 +101,15 @@ namespace XPowerAPI.Controllers
             if (await customerService.CustomerExists(request.Email).ConfigureAwait(false))
                 return BadRequest("An account using that email already exists");
 
-            Customer cust = await customerService.CreateCustomer(request).ConfigureAwait(false);
+            Customer cust;
+            try
+            {
+                cust = await customerService.CreateCustomer(request).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                return BadRequest("an error occuredd whilst trying to sign up the customer");
+            }
 
             //return 200OK if the insert was successful
             if (cust != null)
@@ -133,7 +141,8 @@ namespace XPowerAPI.Controllers
                 if (key != null)
                     return Ok(key);
             }
-            catch (ArgumentNullException ane) {
+            catch (ArgumentNullException ane)
+            {
                 return BadRequest(ane.ParamName + " was null");
             }
             catch (ArgumentException ae)

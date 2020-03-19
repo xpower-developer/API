@@ -139,7 +139,7 @@ namespace XPowerAPI.Repository
             try
             {
                 con.Open();
-                res = cmd.ExecuteNonQuery() != 0;
+                res = cmd.ExecuteScalar() != null;
             }
             catch (Exception)
             {
@@ -192,7 +192,7 @@ namespace XPowerAPI.Repository
             try
             {
                 con.Open();
-                res = cmd.ExecuteNonQuery() != 0;
+                res = cmd.ExecuteScalar() != null;
             }
             catch (Exception)
             {
