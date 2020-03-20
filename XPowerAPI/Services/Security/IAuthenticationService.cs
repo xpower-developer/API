@@ -16,6 +16,6 @@ namespace XPowerAPI.Services.Security
         /// <returns>the fresh session key</returns>
         Task<SessionKey> AuthenticateUser(CustomerSignin request);
 
-        Task<SessionKey> IsSignedIn(string key, bool refresh = false);
+        Task<SessionKey> IsSignedInAsync(string key, bool refresh = false);
     }
 }

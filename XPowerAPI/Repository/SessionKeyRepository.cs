@@ -240,7 +240,89 @@ namespace XPowerAPI.Repository
 
         public IEnumerable<SessionKey> FromSql(string sql, params object[] parameters)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(sql))
+                throw new ArgumentNullException(nameof(sql));
+            if (parameters == null || parameters.Length == 0)
+                throw new ArgumentNullException(nameof(parameters));
+
+            MySqlCommand cmd = new MySqlCommand(sql, con) { CommandType = (System.Data.CommandType)parameters[0] };
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                cmd.Parameters.Add((MySqlParameter)parameters[i]);
+            }
+
+            List<SessionKey> keys = null;
+
+            try
+            {
+                keys = new List<SessionKey>();
+
+                con.Open();
+                MySqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    keys.Add(
+                        new SessionKey(
+                            reader.GetString(reader.GetOrdinal("SessionKeyId")),
+                            reader.GetDateTime(reader.GetOrdinal("ExpirationDate"))
+                        ));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally {
+                con.Close();
+                cmd.Dispose();
+            }
+
+            return keys;
+        }
+
+        public async Task<IEnumerable<SessionKey>> FromSqlAsync(string sql, params object[] parameters)
+        {
+            if (string.IsNullOrEmpty(sql))
+                throw new ArgumentNullException(nameof(sql));
+            if (parameters == null || parameters.Length == 0)
+                throw new ArgumentNullException(nameof(parameters));
+
+            MySqlCommand cmd = new MySqlCommand(sql, con) { CommandType = (System.Data.CommandType)parameters[0] };
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                cmd.Parameters.Add((MySqlParameter)parameters[i]);
+            }
+
+            List<SessionKey> keys = null;
+
+            try
+            {
+                keys = new List<SessionKey>();
+
+                con.Open();
+                DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                while (reader.Read())
+                {
+                    keys.Add(
+                        new SessionKey(
+                            reader.GetString(reader.GetOrdinal("SessionKeyId")),
+                            reader.GetDateTime(reader.GetOrdinal("ExpirationDate"))
+                        ));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await con.CloseAsync().ConfigureAwait(false);
+                cmd.Dispose();
+            }
+
+            return keys;
         }
 
         public IEnumerable<SessionKey> GetAll()
@@ -536,5 +618,6 @@ namespace XPowerAPI.Repository
         {
             throw new NotImplementedException();
         }
+
     }
 }

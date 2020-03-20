@@ -13,6 +13,7 @@ namespace XPowerAPI.Repository
         where TParam : class
     {
         IEnumerable<TEntity> FromSql(string sql, params object[] parameters);
+        Task<IEnumerable<TEntity>> FromSqlAsync(string sql, params object[] parameters);
 
         TEntity Find(params object[] keyValues);
 

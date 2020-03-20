@@ -665,5 +665,10 @@ namespace XPowerAPI.Repository
         {
             throw new NotImplementedException();
         }
+
+        public Task<IEnumerable<Customer>> FromSqlAsync(string sql, params object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

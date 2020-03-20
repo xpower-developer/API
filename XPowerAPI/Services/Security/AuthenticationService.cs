@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,12 +73,53 @@ namespace XPowerAPI.Services.Security
             GC.SuppressFinalize(this);
         }
 
-        public Task<SessionKey> IsSignedIn(string key, bool refresh = false)
+        public async Task<SessionKey> IsSignedInAsync(string key, bool refresh = false)
         {
-            //call stored procedure to update expiration date and return the new expiration date
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentNullException(nameof(key));
+            if (key.Length != 36)
+                throw new ArgumentOutOfRangeException(nameof(key));
 
-            //if a result is returned, return the new key, otherwise null = key is no longer valid
-            throw new NotImplementedException();
+            IEnumerable<SessionKey> results = null;
+
+            if (refresh)
+            {
+                results = await sessionKeyRepo
+                            .FromSqlAsync(
+                                //procedure name
+                                "RefreshSessionKeyIfExists",
+                                //command type
+                                System.Data.CommandType.StoredProcedure,
+                                //params[] parameters
+                                new MySqlParameter()
+                                {
+                                    ParameterName = "keyid",
+                                    Value = key,
+                                    MySqlDbType = MySqlDbType.VarChar,
+                                    Direction = System.Data.ParameterDirection.Input
+                                }).ConfigureAwait(false);
+            }
+            else {
+                results = await sessionKeyRepo
+                            .FromSqlAsync(
+                                //procedure name
+                                "SessionKeyIsValid",
+                                //command type
+                                System.Data.CommandType.StoredProcedure,
+                                //params[] parameters
+                                new MySqlParameter()
+                                {
+                                    ParameterName = "keyid",
+                                    Value = key,
+                                    MySqlDbType = MySqlDbType.VarChar,
+                                    Direction = System.Data.ParameterDirection.Input
+                                }).ConfigureAwait(false);
+            }
+
+            if (results == null || results.Any())
+                return null;
+            else
+                return results.FirstOrDefault();
         }
 
         protected virtual void Dispose(bool desposing)
