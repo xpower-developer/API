@@ -7,6 +7,7 @@ namespace XPowerAPI.Services.Security.Account
 {
     public interface IPasswordService
     {
+        string PasswordPattern { get;  }
         int MinLength { get; }
         int MaxLength { get; }
 

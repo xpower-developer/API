@@ -10,7 +10,7 @@ namespace XPowerAPI.Services.Security.Account
 {
     public class PasswordService : IPasswordService
     {
-        private readonly string PASSWORD_PATTERN;
+        private readonly string passwordPattern;
         private int minLength, maxLength;
         private IHashingService hashingService;
 
@@ -23,11 +23,12 @@ namespace XPowerAPI.Services.Security.Account
             this.MaxLength = max;
             this.hashingService = service;
 
-            PASSWORD_PATTERN = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{" + min + "," + max + "}$";
+            this.passwordPattern = @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{" + minLength + "," + maxLength + "}$";
         }
 
         public int MinLength { get => minLength; private set => minLength = value; }
         public int MaxLength { get => maxLength; private set => maxLength = value; }
+        public string PasswordPattern { get => passwordPattern;}
 
         public bool ComparePasswords(string password, byte[] hash, byte[] salt)
         {
@@ -48,7 +49,7 @@ namespace XPowerAPI.Services.Security.Account
             if (password.Length < MinLength || password.Length > MaxLength)
                 throw new ArgumentOutOfRangeException(nameof(password));
 
-            if (!Regex.IsMatch(password, PASSWORD_PATTERN))
+            if (!Regex.IsMatch(password, passwordPattern))
                 throw new ArgumentOutOfRangeException(nameof(password));
             else
                 return hashingService.CreateHash(Encoding.UTF8.GetBytes(password), out salt);
