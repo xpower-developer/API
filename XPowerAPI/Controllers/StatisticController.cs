@@ -7,7 +7,7 @@ using XPowerAPI.Services;
 
 namespace XPowerAPI.Controllers
 {
-    [Route("api/customer")]
+    [Route("api")]
     [ApiController]
     public class StatisticController : ControllerBase
     {
@@ -22,37 +22,37 @@ namespace XPowerAPI.Controllers
         [HttpGet("devices/{deviceId}/statistics")]
         public async Task<IActionResult> GetDeviceStatistics(
             [FromRoute]long deviceId,
-            [FromHeader(Name = "Authorization")]string sessionKey)
+            [FromHeader(Name = "Authorization")]string authorization)
         {
             if (deviceId == 0)
                 return BadRequest("Cannot fetch statistics for a device with an invalid id");
-            if (string.IsNullOrEmpty(sessionKey))
+            if (string.IsNullOrEmpty(authorization))
                 return BadRequest("Invalid or missing session key");
 
-            sessionKey = sessionKey[(sessionKey.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+            authorization = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
 
-            if (string.IsNullOrEmpty(sessionKey) || sessionKey.Length != 36)
+            if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
                 return BadRequest("Invalid session key");
 
-            return Ok(await statisticService.GetStatisticsForDeviceAsync(deviceId, sessionKey).ConfigureAwait(false));
+            return Ok(await statisticService.GetStatisticsForDeviceAsync(deviceId, authorization).ConfigureAwait(false));
         }
 
         [HttpGet("groups/{groupId}/statistics")]
         public async Task<IActionResult> GetGroupStatistics(
             [FromRoute]long groupId,
-            [FromHeader(Name = "Authorization")]string sessionKey)
+            [FromHeader(Name = "Authorization")]string authorization)
         {
             if (groupId == 0)
                 return BadRequest("Cannot fetch statistics for a device with an invalid id");
-            if (string.IsNullOrEmpty(sessionKey))
+            if (string.IsNullOrEmpty(authorization))
                 return BadRequest("Invalid or missing session key");
 
-            sessionKey = sessionKey[(sessionKey.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+            authorization = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
 
-            if (string.IsNullOrEmpty(sessionKey) || sessionKey.Length != 36)
+            if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
                 return BadRequest("Invalid session key");
 
-            return Ok(await statisticService.GetStatisticsForDeviceAsync(groupId, sessionKey).ConfigureAwait(false));
+            return Ok(await statisticService.GetStatisticsForDeviceAsync(groupId, authorization).ConfigureAwait(false));
         }
     }
 }

@@ -16,6 +16,7 @@ using XPowerAPI.Logging;
 using XPowerAPI.Models;
 using XPowerAPI.Models.Params;
 using XPowerAPI.Repository;
+using XPowerAPI.Services;
 using XPowerAPI.Services.Account;
 using XPowerAPI.Services.Security;
 using XPowerAPI.Services.Security.Account;
@@ -78,8 +79,19 @@ namespace XPowerAPI
                             new MySqlConnection(con),
                             new DbLogger(
                                 new MySqlConnection(con))))
+                .AddScoped<IRepository<Device, DeviceParams>>(
+                    x => new DeviceRepository(
+                            new MySqlConnection(con),
+                            new DbLogger(
+                                new MySqlConnection(con))))
+                .AddScoped<IRepository<IStatistic, StatisticParams>>(
+                    x => new StatisticRepository(
+                            new MySqlConnection(con),
+                            new DbLogger(
+                                new MySqlConnection(con))))
                 .AddScoped<IAuthenticationService, AuthenticationService>()
-                .AddScoped<ICustomerService, CustomerService>();
+                .AddScoped<ICustomerService, CustomerService>()
+                .AddScoped<IStatisticService, StatisticService>();
 
             services.AddControllers();
         }

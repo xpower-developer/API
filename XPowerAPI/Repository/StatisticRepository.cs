@@ -9,6 +9,7 @@ using XPowerAPI.Models.Params;
 using XPowerAPI.Repository.Collections;
 using XPowerAPI.Logging;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.Common;
 
 namespace XPowerAPI.Repository
 {
@@ -149,9 +150,87 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public Task<IPagedList<IStatistic>> GetPagedListAsync(object[] keyValues, int pageNumber = 0, int pageSize = 20, CancellationToken cancellationToken = default)
+        public async Task<IPagedList<IStatistic>> GetPagedListAsync(object[] keyValues, int pageNumber = 0, int pageSize = 20, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (keyValues == null || keyValues.Length == 0)
+                throw new ArgumentNullException(nameof(keyValues));
+
+            MySqlCommand cmd = new MySqlCommand("GetStatisticsPaged", con) { CommandType = System.Data.CommandType.StoredProcedure };
+            StatisticParams param = (StatisticParams)keyValues[0];
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                Direction = System.Data.ParameterDirection.Input,
+                ParameterName = "pageSize",
+                Value = pageSize,
+                MySqlDbType = MySqlDbType.Int32
+            });
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                Direction = System.Data.ParameterDirection.Input,
+                ParameterName = "pageNumber",
+                Value = pageNumber,
+                MySqlDbType = MySqlDbType.Int32
+            });
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                Direction = System.Data.ParameterDirection.Input,
+                ParameterName = "deviceId",
+                Value = param.DeviceId,
+                MySqlDbType = MySqlDbType.Int64
+            });
+            cmd.Parameters.Add(new MySqlParameter()
+            {
+                Direction = System.Data.ParameterDirection.Input,
+                ParameterName = "sessionKey",
+                Value = param.SessionKey,
+                MySqlDbType = MySqlDbType.VarChar
+            });
+
+
+            IList<IStatistic> stats = new List<IStatistic>();
+
+            try
+            {
+                await con.OpenAsync().ConfigureAwait(false);
+                DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                while (reader.Read())
+                {
+                    switch (reader.GetInt16(reader.GetOrdinal("StatisticTypeId")))
+                    {
+                        case (short)StatisticType.WATTAGE:
+                            stats.Add(
+                                new WattageStatistic(
+                                    reader.GetInt64(reader.GetOrdinal("StatisticId")),
+                                    reader.GetString(reader.GetOrdinal("Value")),
+                                    reader.GetDateTime(reader.GetOrdinal("Created"))));
+                            break;
+                        case (short)StatisticType.SWITCH:
+                            stats.Add(
+                                new SwitchStatistic(
+                                    reader.GetInt64(reader.GetOrdinal("StatisticId")),
+                                    reader.GetString(reader.GetOrdinal("Value")),
+                                    reader.GetDateTime(reader.GetOrdinal("Created"))));
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                //fix if true pagination is needed
+                return new PagedList<IStatistic>(stats, stats.Count, stats.Count, 0, 0);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await con.CloseAsync().ConfigureAwait(false);
+                cmd.Dispose();
+            }
         }
 
         public IStatistic Insert(StatisticParams entity)

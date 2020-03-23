@@ -8,8 +8,13 @@ namespace XPowerAPI.Models
     public interface IStatistic
     {
         public long StatisticId { get; }
-        public long DeviceId { get; set; }
-        public string Value { get; set; }
-        public DateTime Created { get; set; }
+        public StatisticType StatisticType { get; }
+        public string Value { get; }
+        public DateTime Created { get; }
+    }
+
+    public enum StatisticType { 
+        WATTAGE = 1,
+        SWITCH = 2
     }
 }

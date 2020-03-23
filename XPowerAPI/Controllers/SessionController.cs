@@ -18,7 +18,7 @@ namespace XPowerAPI.Controllers
         ILogger logger;
 
         public SessionController(
-            [FromServices]IAuthenticationService authenticationService, 
+            [FromServices]IAuthenticationService authenticationService,
             [FromServices]ILogger logger)
         {
             this.authenticationService = authenticationService;
@@ -30,21 +30,29 @@ namespace XPowerAPI.Controllers
         /// </summary>
         /// <param name="key">the Authorization header key value</param>
         /// <returns>a 200OK code if the key is still valid, otherwise a 403Forbidden is returned</returns>
-        [HttpGet("/verify")]
+        [HttpGet("verify")]
         public async Task<IActionResult> VerifySession(
-            [FromHeader(Name = "Authorization")]string key)
+            [FromHeader]string authorization)
         {
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrEmpty(authorization))
                 return BadRequest("a session key is required");
 
-            string sessionkey = key[(key.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+            try
+            {
+                authorization = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message + '\n' + e.StackTrace);
+                throw;
+            }
 
-            if (string.IsNullOrEmpty(sessionkey) || sessionkey.Length != 36)
+            if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
                 return BadRequest("invalid session key");
 
             try
             {
-                SessionKey dbkey = await authenticationService.IsSignedInAsync(sessionkey).ConfigureAwait(false);
+                SessionKey dbkey = await authenticationService.IsSignedInAsync(authorization).ConfigureAwait(false);
                 if (dbkey == null)
                     return Forbid("The given key is no longer valid");
                 else
@@ -52,7 +60,8 @@ namespace XPowerAPI.Controllers
             }
             catch (Exception e)
             {
-                await logger.LogAsync("An error occuredd whilst trying to check a session key, error: " + e.Message).ConfigureAwait(false);
+                await logger.LogAsync("An error occured whilst trying to check a session key, error: " + e.Message).ConfigureAwait(false);
+                return BadRequest("something went wrong whilst tryng to verify key");
                 throw;
             }
         }
@@ -63,11 +72,12 @@ namespace XPowerAPI.Controllers
         /// <param name="key">the Authorization header key value</param>
         /// <returns>a 200OK code if the key is still valid, otherwise a 403Forbidden is returned</returns>
         [HttpGet("refresh")]
-        public async Task<IActionResult> RefreshSession([FromHeader(Name = "Authorization")]string key) {
-            if (string.IsNullOrEmpty(key))
+        public async Task<IActionResult> RefreshSession([FromHeader]string authorization)
+        {
+            if (string.IsNullOrEmpty(authorization))
                 return BadRequest("a session key is required");
 
-            string sessionkey = key[key.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase)..];
+            string sessionkey = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
 
             if (string.IsNullOrEmpty(sessionkey) || sessionkey.Length != 36)
                 return BadRequest("invalid session key");

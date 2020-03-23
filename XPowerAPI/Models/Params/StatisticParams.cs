@@ -8,7 +8,7 @@ namespace XPowerAPI.Models.Params
     public class StatisticParams
     {
         public long DeviceId { get; set; }
-        public int CustomerId { get; set; }
+        public int GroupId { get; set; }
         public string SessionKey { get; set; }
         public IStatistic Statistic { get; set; }
     }

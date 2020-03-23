@@ -1,6 +1,8 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.AspNetCore.Mvc;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +19,14 @@ namespace XPowerAPI.Repository
 
         private MySqlConnection con;
         private ILogger logger;
+
+        public DeviceRepository(
+            [FromServices]MySqlConnection con, 
+            [FromServices]ILogger logger)
+        {
+            this.con = con;
+            this.logger = logger;
+        }
 
         public int Count()
         {
@@ -104,9 +114,51 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Device>> FromSqlAsync(string sql, params object[] parameters)
+        public async Task<IEnumerable<Device>> FromSqlAsync(string sql, params object[] parameters)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrEmpty(sql))
+                throw new ArgumentNullException(nameof(sql));
+            if (parameters == null || parameters.Length == 0)
+                throw new ArgumentNullException(nameof(parameters));
+
+            MySqlCommand cmd = new MySqlCommand(sql, con) { CommandType = (System.Data.CommandType)parameters[0] };
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                cmd.Parameters.Add((MySqlParameter)parameters[i]);
+            }
+
+            List<Device> devices = null;
+
+            try
+            {
+                devices = new List<Device>();
+
+                con.Open();
+                DbDataReader reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
+
+                while (reader.Read())
+                {
+                    devices.Add(
+                        new Device(
+                            reader.GetInt64(reader.GetOrdinal("DeviceId")),
+                            reader.GetString(reader.GetOrdinal("UUID")),
+                            reader.GetString(reader.GetOrdinal("Name")),
+                            reader.GetBoolean(reader.GetOrdinal("State")),
+                            reader.GetDateTime(reader.GetOrdinal("Created"))
+                        ));
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            finally
+            {
+                await con.CloseAsync().ConfigureAwait(false);
+                cmd.Dispose();
+            }
+
+            return devices;
         }
 
         public IEnumerable<Device> GetAll()

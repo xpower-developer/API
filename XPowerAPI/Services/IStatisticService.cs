@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using XPowerAPI.Models;
+using XPowerAPI.Repository.Collections;
 
 namespace XPowerAPI.Services
 {
     public interface IStatisticService
     {
-        Task<IEnumerable<IStatistic>> GetStatisticsForDeviceAsync(long deviceId, string sessionKey);
-        Task<IDictionary<Device, IEnumerable<IStatistic>>> GetStatisticsForGroupAsync(long groupId, string sessionKey);
+        Task<IPagedList<IStatistic>> GetStatisticsForDeviceAsync(long deviceId, string sessionKey);
+        Task<IDictionary<Device, IPagedList<IStatistic>>> GetStatisticsForGroupAsync(long groupId, string sessionKey);
     }
 }
