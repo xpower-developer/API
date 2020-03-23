@@ -31,12 +31,13 @@ namespace XPowerAPI.Controllers
         /// <param name="key">the Authorization header key value</param>
         /// <returns>a 200OK code if the key is still valid, otherwise a 403Forbidden is returned</returns>
         [HttpGet]
-        public async Task<IActionResult> VerifySession([FromHeader(Name = "Authorization")]string key)
+        public async Task<IActionResult> VerifySession(
+            [FromHeader(Name = "Authorization")]string key)
         {
             if (string.IsNullOrEmpty(key))
                 return BadRequest("a session key is required");
 
-            string sessionkey = key[key.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase)..];
+            string sessionkey = key[(key.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
 
             if (string.IsNullOrEmpty(sessionkey) || sessionkey.Length != 36)
                 return BadRequest("invalid session key");

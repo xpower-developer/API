@@ -4,20 +4,51 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using XPowerAPI.Logging;
 using XPowerAPI.Models;
 using XPowerAPI.Models.Params;
 using XPowerAPI.Repository.Collections;
+using XPowerAPI.Logging;
+using Microsoft.AspNetCore.Mvc;
 
 namespace XPowerAPI.Repository
 {
-    public class DeviceRepository : IRepository<Device, DeviceParams>, IDisposable
+    public class StatisticRepository : IRepository<IStatistic, StatisticParams>, IDisposable
     {
         private bool isDisposed = false;
 
         private MySqlConnection con;
         private ILogger logger;
 
+        public StatisticRepository(
+            [FromServices]MySqlConnection con,
+            [FromServices]ILogger logger)
+        {
+            this.con = con;
+            this.logger = logger;
+        }
+
+        ~StatisticRepository()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (isDisposed)
+                return;
+
+            if (disposing)
+            {
+                con.Dispose();
+                logger.Dispose();
+            }
+        }
         public int Count()
         {
             throw new NotImplementedException();
@@ -33,17 +64,17 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public void Delete(DeviceParams entity)
+        public void Delete(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(params DeviceParams[] entities)
+        public void Delete(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public void Delete(IEnumerable<DeviceParams> entities)
+        public void Delete(IEnumerable<StatisticParams> entities)
         {
             throw new NotImplementedException();
         }
@@ -53,25 +84,19 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public Task DeleteAsync(DeviceParams entity)
+        public Task DeleteAsync(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public Task DeleteAsync(params DeviceParams[] entities)
+        public Task DeleteAsync(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task DeleteAsync(IEnumerable<DeviceParams> entities)
+        public Task DeleteAsync(IEnumerable<StatisticParams> entities)
         {
             throw new NotImplementedException();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         public bool Exists(object key)
@@ -84,121 +109,109 @@ namespace XPowerAPI.Repository
             throw new NotImplementedException();
         }
 
-        public Device Find(params object[] keyValues)
+        public IStatistic Find(params object[] keyValues)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Device> FindAsync(params object[] keyValues)
+        public Task<IStatistic> FindAsync(params object[] keyValues)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Device> FindAsync(object[] keyValues, CancellationToken cancellationToken)
+        public Task<IStatistic> FindAsync(object[] keyValues, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Device> FromSql(string sql, params object[] parameters)
+        public IEnumerable<IStatistic> FromSql(string sql, params object[] parameters)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Device>> FromSqlAsync(string sql, params object[] parameters)
+        public Task<IEnumerable<IStatistic>> FromSqlAsync(string sql, params object[] parameters)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Device> GetAll()
+        public IEnumerable<IStatistic> GetAll()
         {
             throw new NotImplementedException();
         }
 
-        public Task<IEnumerable<Device>> GetAllAsync()
+        public Task<IEnumerable<IStatistic>> GetAllAsync()
         {
             throw new NotImplementedException();
         }
 
-        public IPagedList<Device> GetPagedList(object[] keyValues, int pageNumber = 0, int pageSize = 20)
+        public IPagedList<IStatistic> GetPagedList(object[] keyValues, int pageNumber = 0, int pageSize = 20)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IPagedList<Device>> GetPagedListAsync(object[] keyValues, int pageNumber = 0, int pageSize = 20, CancellationToken cancellationToken = default)
+        public Task<IPagedList<IStatistic>> GetPagedListAsync(object[] keyValues, int pageNumber = 0, int pageSize = 20, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Device Insert(DeviceParams entity)
+        public IStatistic Insert(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public void Insert(params DeviceParams[] entities)
+        public void Insert(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public void Insert(IEnumerable<DeviceParams> entities)
+        public void Insert(IEnumerable<StatisticParams> entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Device> InsertAsync(DeviceParams entity)
+        public Task<IStatistic> InsertAsync(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public Task InsertAsync(params DeviceParams[] entities)
+        public Task InsertAsync(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task InsertAsync(IEnumerable<DeviceParams> entities, CancellationToken cancellationToken = default)
+        public Task InsertAsync(IEnumerable<StatisticParams> entities, CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
 
-        public Device Update(DeviceParams entity)
+        public IStatistic Update(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(params DeviceParams[] entities)
+        public void Update(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public void Update(IEnumerable<DeviceParams> entities)
+        public void Update(IEnumerable<StatisticParams> entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task<Device> UpdateAsync(DeviceParams entity)
+        public Task<IStatistic> UpdateAsync(StatisticParams entity)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateAsync(params DeviceParams[] entities)
+        public Task UpdateAsync(params StatisticParams[] entities)
         {
             throw new NotImplementedException();
         }
 
-        public Task UpdateAsync(IEnumerable<DeviceParams> entities)
+        public Task UpdateAsync(IEnumerable<StatisticParams> entities)
         {
             throw new NotImplementedException();
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (isDisposed)
-                return;
-
-            if (disposing)
-            {
-                con.Dispose();
-                logger.Dispose();
-            }
         }
     }
 }
