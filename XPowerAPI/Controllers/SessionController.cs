@@ -30,7 +30,7 @@ namespace XPowerAPI.Controllers
         /// </summary>
         /// <param name="key">the Authorization header key value</param>
         /// <returns>a 200OK code if the key is still valid, otherwise a 403Forbidden is returned</returns>
-        [HttpGet]
+        [HttpGet("/verify")]
         public async Task<IActionResult> VerifySession(
             [FromHeader(Name = "Authorization")]string key)
         {
