@@ -116,7 +116,7 @@ namespace XPowerAPI.Services.Security
                                 }).ConfigureAwait(false);
             }
 
-            if (results == null || results.Any())
+            if (results == null || !results.Any())
                 return null;
             else
                 return results.FirstOrDefault();

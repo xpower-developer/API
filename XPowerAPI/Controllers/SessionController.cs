@@ -57,7 +57,7 @@ namespace XPowerAPI.Controllers
                 if (dbkey == null)
                     return Forbid("The given key is no longer valid");
                 else
-                    return Ok("the given key is still valid for another " + (dbkey.ExpirationDate - DateTime.Now).ToString());
+                    return Ok("the given key is still valid for another " + (dbkey.ExpirationDate - DateTime.Now).TotalMinutes + " minutes");
             }
             catch (Exception e)
             {

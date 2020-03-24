@@ -48,6 +48,41 @@ namespace XPowerAPI_Tests
         }
 
         [Fact]
+        public void sessionkey_is_correct() {
+            string connectionString = conf.GetSection("ConnectionStrings")["maria"];
+
+            MySqlConnection con = new MySqlConnection(connectionString);
+
+            SessionController ctl = new SessionController(
+                new AuthenticationService(
+                    new CustomerRepository(
+                    con,
+                    new EmptyLogger()),
+                new SessionKeyRepository(
+                    con,
+                    new EmptyLogger()),
+                    new PasswordService(
+                    new SHA512HashingService(),
+                    ((int)conf
+                            .GetSection("Account")
+                            .GetSection("Security")
+                            .GetValue(
+                                typeof(int),
+                                "PasswordMinLength")),
+                    ((int)conf
+                           .GetSection("Account")
+                           .GetSection("Security")
+                           .GetValue(
+                               typeof(int),
+                               "PasswordMaxLength")))),
+                new EmptyLogger());
+
+            object res = ctl.VerifySession("Bearer de5ef13d-6daa-11ea-b708-000c291c2166");
+
+            Assert.NotNull(res);
+        }
+
+        [Fact]
         public void testdb_can_create_user()
         {
             ClearTestDB();
