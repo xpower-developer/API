@@ -43,6 +43,7 @@ namespace XPowerAPI.Controllers
             }
             catch (Exception e)
             {
+                await logger.LogAsync("guess this is it").ConfigureAwait(false);
                 return BadRequest(e.Message + '\n' + e.StackTrace);
                 throw;
             }
