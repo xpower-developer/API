@@ -49,7 +49,7 @@ namespace XPowerAPI.Controllers
         }
 
         [HttpGet("devices/{deviceId}/statistics/summarized")]
-        public async Task<IActionResult> GetDeviceStatisticsWithinTimeFrame(
+        public async Task<IActionResult> GetDeviceStatisticsDaily(
             [FromRoute]long deviceId,
             [FromHeader(Name = "Authorization")]string authorization)
         {
