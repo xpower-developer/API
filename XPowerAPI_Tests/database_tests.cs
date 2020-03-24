@@ -48,6 +48,11 @@ namespace XPowerAPI_Tests
         }
 
         [Fact]
+        public void device_has_statestics() { 
+        
+        }
+
+        [Fact]
         public void sessionkey_is_correct() {
             string connectionString = conf.GetSection("ConnectionStrings")["maria"];
 
