@@ -10,6 +10,7 @@ namespace XPowerAPI.Models.Params
         public long DeviceId { get; set; }
         public int GroupId { get; set; }
         public string SessionKey { get; set; }
+        public DateTime FromTime { get; set; }
         public IStatistic Statistic { get; set; }
     }
 }

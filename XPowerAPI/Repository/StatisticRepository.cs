@@ -157,8 +157,8 @@ namespace XPowerAPI.Repository
             if (keyValues == null || keyValues.Length == 0)
                 throw new ArgumentNullException(nameof(keyValues));
 
-            MySqlCommand cmd = new MySqlCommand("GetStatisticsPaged", con) { CommandType = System.Data.CommandType.StoredProcedure };
             StatisticParams param = (StatisticParams)keyValues[0];
+            MySqlCommand cmd = new MySqlCommand(param.FromTime == null ? "GetStatisticsPaged" : "GetStatisticsPagedFrom", con) { CommandType = System.Data.CommandType.StoredProcedure };
             cmd.Parameters.Add(new MySqlParameter()
             {
                 Direction = System.Data.ParameterDirection.Input,
@@ -187,6 +187,17 @@ namespace XPowerAPI.Repository
                 Value = param.SessionKey,
                 MySqlDbType = MySqlDbType.VarChar
             });
+
+            if (param.FromTime != null)
+            {
+                cmd.Parameters.Add(new MySqlParameter()
+                {
+                    Direction = System.Data.ParameterDirection.Input,
+                    ParameterName = "fromtime",
+                    Value = param.FromTime,
+                    MySqlDbType = MySqlDbType.DateTime
+                });
+            }
 
 
             IList<IStatistic> stats = new List<IStatistic>();
