@@ -11,6 +11,12 @@ namespace XPowerAPI.Models.Params
         public int GroupId { get; set; }
         public string SessionKey { get; set; }
         public DateTime FromTime { get; set; }
+        public SummaryType SummaryType { get; set; }
         public IStatistic Statistic { get; set; }
+    }
+
+    public enum SummaryType { 
+        NONE,
+        DAILY
     }
 }

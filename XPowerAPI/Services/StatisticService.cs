@@ -79,6 +79,33 @@ namespace XPowerAPI.Services
             }
         }
 
+        public async Task<IPagedList<IStatistic>> GetStatisticsForDeviceSummarizedAsync(long deviceId, string sessionKey)
+        {
+            if (deviceId == 0)
+                throw new ArgumentNullException(nameof(deviceId));
+            if (string.IsNullOrEmpty(sessionKey) || sessionKey.Length != 36)
+                throw new ArgumentNullException(nameof(sessionKey));
+
+            try
+            {
+                return await statisticRepo.GetPagedListAsync(
+                    new object[] {
+                        new StatisticParams(){
+                            DeviceId = deviceId,
+                            SessionKey = sessionKey,
+                            SummaryType = SummaryType.DAILY
+                        },
+                        0,
+                        1000
+                    })
+                    .ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public async Task<IDictionary<Device, IPagedList<IStatistic>>> GetStatisticsForGroupAsync(long groupId, string sessionKey)
         {
             if (groupId == 0)

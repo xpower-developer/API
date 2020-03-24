@@ -48,6 +48,58 @@ namespace XPowerAPI.Controllers
             return Ok(res);
         }
 
+        [HttpGet("devices/{deviceId}/statistics/summarized")]
+        public async Task<IActionResult> GetDeviceStatisticsWithinTimeFrame(
+            [FromRoute]long deviceId,
+            [FromHeader(Name = "Authorization")]string authorization)
+        {
+            if (deviceId == 0)
+                return BadRequest("Cannot fetch statistics for a device with an invalid id");
+            if (string.IsNullOrEmpty(authorization))
+                return BadRequest("Invalid or missing session key");
+
+            authorization = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+
+            if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
+                return BadRequest("Invalid session key");
+
+            StatisticResult res = new StatisticResult()
+            {
+                Statistics = await statisticService.GetStatisticsForDeviceSummarizedAsync(deviceId, authorization).ConfigureAwait(false)
+            };
+
+            res.TotalWattage = res.Statistics.Items.Sum(x => float.Parse(x.Value, CultureInfo.InvariantCulture));
+
+            return Ok(res);
+        }
+
+        [HttpGet("devices/{deviceId}/statistics/{since}")]
+        public async Task<IActionResult> GetDeviceStatisticsWithinTimeFrame(
+            [FromRoute]long deviceId,
+            [FromRoute]DateTime since,
+            [FromHeader(Name = "Authorization")]string authorization)
+        {
+            if (deviceId == 0)
+                return BadRequest("Cannot fetch statistics for a device with an invalid id");
+            if (string.IsNullOrEmpty(authorization))
+                return BadRequest("Invalid or missing session key");
+
+            authorization = authorization[(authorization.IndexOf(' ', StringComparison.InvariantCultureIgnoreCase) + 1)..];
+
+            if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
+                return BadRequest("Invalid session key");
+
+            StatisticResult res = new StatisticResult()
+            {
+                Statistics = await statisticService.GetStatisticsForDeviceAsync(deviceId, authorization).ConfigureAwait(false)
+            };
+
+            res.Switches = res.Statistics.Items.Where(x => x.StatisticType == StatisticType.SWITCH).Count();
+            res.TotalWattage = res.Statistics.Items.Where(x => x.StatisticType == StatisticType.WATTAGE).Sum((x) => long.Parse(x.Value, CultureInfo.InvariantCulture));
+
+            return Ok(res);
+        }
+
         [HttpGet("groups/{groupId}/statistics")]
         public async Task<IActionResult> GetGroupStatistics(
             [FromRoute]long groupId,
