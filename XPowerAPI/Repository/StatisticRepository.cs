@@ -158,13 +158,23 @@ namespace XPowerAPI.Repository
                 throw new ArgumentNullException(nameof(keyValues));
 
             StatisticParams param = (StatisticParams)keyValues[0];
-            MySqlCommand cmd = 
-                new MySqlCommand(
-                    param.FromTime == null ? 
-                        (param.SummaryType == SummaryType.NONE ? 
-                            "GetStatisticsPaged" : 
-                            (param.SummaryType == SummaryType.DAILY) ? "GetDeviceStatisticsDailySummary" : "") : 
-                        "GetStatisticsPagedFrom", con) { CommandType = System.Data.CommandType.StoredProcedure };
+            MySqlCommand cmd =
+                new MySqlCommand("", con) { CommandType = System.Data.CommandType.StoredProcedure };
+
+            if (param.FromTime != DateTime.MinValue)
+                cmd.CommandText = "GetStatisticsPagedFrom";
+            else
+                switch (param.SummaryType)
+                {
+                    case SummaryType.NONE:
+                        cmd.CommandText = "GetStatisticsPaged";
+                        break;
+                    case SummaryType.DAILY:
+                        cmd.CommandText = "GetDeviceStatisticsDailySummary";
+                        break;
+                    default: break;
+                };
+
             cmd.Parameters.Add(new MySqlParameter()
             {
                 Direction = System.Data.ParameterDirection.Input,
@@ -194,7 +204,7 @@ namespace XPowerAPI.Repository
                 MySqlDbType = MySqlDbType.VarChar
             });
 
-            if (param.FromTime != null)
+            if (param.FromTime != DateTime.MinValue)
             {
                 cmd.Parameters.Add(new MySqlParameter()
                 {

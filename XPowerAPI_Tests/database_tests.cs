@@ -9,6 +9,7 @@ using XPowerAPI.Logging;
 using XPowerAPI.Models;
 using XPowerAPI.Models.Params;
 using XPowerAPI.Repository;
+using XPowerAPI.Services;
 using XPowerAPI.Services.Account;
 using XPowerAPI.Services.Security;
 using XPowerAPI.Services.Security.Account;
@@ -22,6 +23,24 @@ namespace XPowerAPI_Tests
                 new ConfigurationBuilder()
                     .AddJsonFile("appsettings.json")
                     .Build();
+
+        [Fact]
+        public async void db_returns_summary()
+        {
+            string connectionString = conf.GetSection("ConnectionStrings")["maria"];
+
+            MySqlConnection con = new MySqlConnection(connectionString);
+
+            StatisticController ctl = new StatisticController(
+                    new StatisticService(
+                        new StatisticRepository(con, new EmptyLogger()),
+                        new DeviceRepository(con, new EmptyLogger()))
+                );
+
+            IActionResult res = await ctl.GetDeviceStatisticsDaily(1, "090a34dd-6d08-11ea-b708-000c291c2166");
+
+            Assert.True(res != null);
+        }
 
         [Fact]
         public void maindb_can_connect()
@@ -48,12 +67,14 @@ namespace XPowerAPI_Tests
         }
 
         [Fact]
-        public void device_has_statestics() { 
-        
+        public void device_has_statestics()
+        {
+
         }
 
         [Fact]
-        public void sessionkey_is_correct() {
+        public void sessionkey_is_correct()
+        {
             string connectionString = conf.GetSection("ConnectionStrings")["maria"];
 
             MySqlConnection con = new MySqlConnection(connectionString);
