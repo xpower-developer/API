@@ -38,14 +38,7 @@ namespace XPowerAPI.Controllers
             if (string.IsNullOrEmpty(authorization) || authorization.Length != 36)
                 return BadRequest("Invalid session key");
 
-            StatisticResult res = new StatisticResult() { 
-                Statistics = await statisticService.GetStatisticsForDeviceAsync(deviceId, authorization).ConfigureAwait(false)
-            };
-
-            res.Switches = res.Statistics.Items.Where(x => x.StatisticType == StatisticType.SWITCH).Count();
-            res.TotalWattage = res.Statistics.Items.Where(x => x.StatisticType == StatisticType.WATTAGE).Sum((x) => long.Parse(x.Value, CultureInfo.InvariantCulture));
-
-            return Ok(res);
+            return Ok(await statisticService.GetStatisticsForDeviceAsync(deviceId, authorization).ConfigureAwait(false));
         }
 
         [HttpGet("devices/{deviceId}/statistics/summarized")]

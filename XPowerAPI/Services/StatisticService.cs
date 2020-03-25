@@ -37,7 +37,8 @@ namespace XPowerAPI.Services
                     new object[] { 
                         new StatisticParams(){ 
                             DeviceId = deviceId,
-                            SessionKey = sessionKey
+                            SessionKey = sessionKey,
+                            SummaryType = SummaryType.NONE
                         },
                         0,
                         1000
