@@ -157,20 +157,21 @@ namespace XPowerAPI.Repository
             if (keyValues == null || keyValues.Length == 0)
                 throw new ArgumentNullException(nameof(keyValues));
 
+            //temporarily call the same sp regardless of which is requested, for test reasons
             StatisticParams param = (StatisticParams)keyValues[0];
             MySqlCommand cmd =
-                new MySqlCommand("", con) { CommandType = System.Data.CommandType.StoredProcedure };
+                new MySqlCommand("GetDeviceStatisticsDailySummary", con) { CommandType = System.Data.CommandType.StoredProcedure };
 
             if (param.FromTime != DateTime.MinValue)
-                cmd.CommandText = "GetStatisticsPagedFrom";
+                cmd.CommandText = "GetDeviceStatisticsDailySummary";
             else
                 switch (param.SummaryType)
                 {
-                    case SummaryType.NONE:
-                        cmd.CommandText = "GetStatisticsPaged";
-                        break;
                     case SummaryType.DAILY:
                         cmd.CommandText = "GetDeviceStatisticsDailySummary";
+                        break;
+                    case SummaryType.NONE:
+                        cmd.CommandText = "GetDeviceStatisticsDailySummary";//"GetStatisticsPaged";
                         break;
                     default: break;
                 };
@@ -246,8 +247,8 @@ namespace XPowerAPI.Repository
                     }
                 }
 
-                //fix if true pagination is needed
-                return new PagedList<IStatistic>(stats, stats.Count, stats.Count, 0, 0);
+                 //fix if true pagination is needed
+                return new PagedList<IStatistic>(stats, stats.Count, 1, 1, 0);
             }
             catch (Exception)
             {
