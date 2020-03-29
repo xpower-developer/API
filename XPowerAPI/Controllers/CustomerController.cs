@@ -94,7 +94,7 @@ namespace XPowerAPI.Controllers
                 request.StreetNumber == null ||
                 request.StreetNumber.Length == 0)
                 return BadRequest("The address information is invalid");
-            if (Regex.IsMatch(request.Password, passwordService.PasswordPattern))
+            if (!Regex.IsMatch(request.Password, passwordService.PasswordPattern))
                 return BadRequest($"The supplied password was invalid, a password must contain one uppercase, lowercase, number and special character and be {passwordService.MinLength}-{passwordService.MaxLength} characters long");
 
             //check if the customer is already created within the database
